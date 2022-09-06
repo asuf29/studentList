@@ -7,6 +7,12 @@ class Student {
 }
 
 class UI {
+    displayStudents() {
+        let students = Repo.getStudents();
+
+        students.forEach((student) => UI.addStudentToList(student));
+    }
+
     addStudentToList(student) {
         const list = document.getElementById('student-list');
         const row = document.createElement('tr');
@@ -14,7 +20,7 @@ class UI {
             <td>${student.name}</td>
             <td>${student.surname}</td>
             <td>${student.studentNumber}</td>
-            <td><a href="" class="delete">X</a></td>
+            <td><a href="#" class="delete">X</a></td>
         `;
         list.appendChild(row); //appendChild ile listeye ekledim
     }
@@ -54,9 +60,42 @@ class UI {
     }
 }
 
+class Repo {
+    getStudents() {
+        let students;
+        if(localStorage.getItem('students') === null) {
+            students = [];
+        } else {
+            students = JSON.parse(localStorage.getItem('students'));
+        }
+        return students;
+    }
+
+    saveStudent(student) {
+        let students;
+        students = Repo.getStudents();
+        students.push(student);
+        localStorage.setItem('students', JSON.stringify(students));
+    }
+
+    removeStudent(studentNumber) {
+        const students = Repo.getStudents();
+
+        students.forEach((student, index) => {
+            if(student.studentNumber === studentNumber) {
+                students.splice(index, 1);
+            }
+        });
+        localStorage.setItem('students', JSON.stringify(students));
+    }
+}
+
+
 //Event Listening
 document.getElementById('student-form').addEventListener('submit', function(e) {
-    //get form valuesIt
+    e.preventDefault();
+
+    //get form values
     const name = document.getElementById('name').value;
     const surname = document.getElementById('surname').value;
     const studentNumber = document.getElementById('studentNumber').value;
@@ -73,6 +112,8 @@ document.getElementById('student-form').addEventListener('submit', function(e) {
         //add student to list
         ui.addStudentToList(student);
 
+        Repo.saveStudent(student);
+    
         //show success
         ui.showAlert('Student Added Successfully', 'success');
 
@@ -80,7 +121,7 @@ document.getElementById('student-form').addEventListener('submit', function(e) {
         ui.clearAll();
     }
    
-    e.preventDefault();
+    // e.preventDefault();
 })
 
 //Event listening for delete
@@ -90,6 +131,8 @@ document.getElementById('student-list').addEventListener('click', function(e) {
 
     //delete student
     ui.deleteStudent(e.target);
+
+    Repo.removeStudent(e.target.parentElement.parentElementSibling.textContent);
 
     //show message
     ui.showAlert('Student Deleted', 'success');
